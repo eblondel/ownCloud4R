@@ -76,6 +76,59 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       response <- list(request = request, requestHeaders = headers(r),
                        status = status_code(r), response = responseContent)
       return(response)
+    },
+    
+    #PROPFIND
+    PROPFIND = function(url, request){
+      uri <- paste(url, request, sep = "/")
+      h <- new_handle()
+      handle_setopt(h, customrequest = "PROPFIND")
+      handle_setopt(h, username = private$user)
+      handle_setopt(h, password = private$pwd)
+      response <- curl_fetch_memory(uri, h)
+      xml <- rawToChar(response$content)
+      response <- xmlParse(xml, asText = TRUE)
+      webdavNS <- c(d = "DAV:")
+      base <- paste(paste("/", strsplit(uri, "/")[[1]][-1:-3], sep="", collapse=""), "/", sep="")
+      nodes <- getNodeSet(response, "//d:response")
+      result <- do.call("rbind", lapply(nodes, function(node){
+        out_node <- data.frame(
+          name = sub(base, "", URLdecode(xpathSApply(xmlDoc(node), "//d:href", namespaces = webdavNS, xmlValue))),
+          resourceType = ifelse(length(xmlChildren(getNodeSet(xmlDoc(node), "//d:propstat/d:prop/d:resourcetype", namespaces = webdavNS)[[1]]))==0,"file","collection"),
+          contentType = {
+            ct <- xpathSApply(xmlDoc(node), "//d:propstat/d:prop/d:getcontenttype", namespaces = webdavNS, xmlValue)
+            if(length(ct)==0) ct <- NA
+            ct
+          },
+          size = {
+            s = xpathSApply(xmlDoc(node), "//d:propstat/d:prop/d:getcontentlength", namespaces = webdavNS, xmlValue)
+            s = as.numeric(s)
+            s <- if(length(s)==0) NA else s/1048576
+            s
+          },
+          quota = {
+            q = xpathSApply(xmlDoc(node), "//d:propstat/d:prop/d:quota-used-bytes", namespaces = webdavNS, xmlValue)
+            q = as.numeric(q)
+            q <- if(length(q)==0) NA else q/1e6
+            q
+          },
+          lastModified = {
+            date = xpathSApply(xmlDoc(node), "//d:propstat/d:prop/d:getlastmodified", namespaces = webdavNS, xmlValue)
+            date = gsub(" GMT", "", date)
+            lctime <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "C")
+            date <- strptime(date, "%a, %d %b %Y %H:%M:%S")
+            Sys.setlocale("LC_TIME", lctime)
+            date
+          },
+          stringsAsFactors = FALSE
+        )
+        return(out_node)
+      }))
+      result <- result[result$name != "", ]
+      
+      response <- list(request = request, requestHeaders = NA,
+                       status = NA, response = result)
+      return(response)
     }
   ),
   
@@ -104,7 +157,8 @@ ownCloudRequest <- R6Class("ownCloudRequest",
     execute = function(){
       
       req <- switch(private$type,
-        "GET" = private$GET(private$url, private$request)
+        "GET" = private$GET(private$url, private$request),
+        "PROPFIND" = private$PROPFIND(private$url, private$request)
       )
       
       private$request <- req$request

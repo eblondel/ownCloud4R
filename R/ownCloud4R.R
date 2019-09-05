@@ -6,8 +6,10 @@
 #' @importFrom R6 R6Class
 #' @importFrom openssl base64_encode
 #' @import methods
+#' @import curl
 #' @import httr
 #' @import jsonlite
+#' @import XML
 #' 
 #' @title Interface to 'ownCloud' REST API
 #' @description Provides an Interface to 'Zenodo' (<https://owncloud.org/>) REST API.

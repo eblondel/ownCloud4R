@@ -26,11 +26,19 @@ ownCloudManager
  \item{\code{connect()}}{
    A method to connect to 'ownCloud' and set version/capabilities
  }
- \item{\code{getVersion}}{
+ \item{\code{getVersion()}}{
    Get the 'ownCloud' server version
  }
- \item{\code{getCapabilities}}{
+ \item{\code{getCapabilities()}}{
    Get the 'ownCloud' server capabilities
+ }
+ \item{\code{getWebdavRoot()}}{
+   Get the 'ownCloud' WebDAV root URL
+ }
+ \item{\code{listFiles(relPath)}}{
+   List folders/files given a relative path. The relative path is set
+   to \code{""} by default, which corresponds to the root of the 'ownCloud'
+   repository.
  }
 }
 }

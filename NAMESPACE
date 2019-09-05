@@ -3,6 +3,8 @@
 export(ownCloud4RLogger)
 export(ownCloudManager)
 export(ownCloudRequest)
+import(XML)
+import(curl)
 import(httr)
 import(jsonlite)
 import(methods)
