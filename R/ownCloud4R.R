@@ -7,7 +7,16 @@
 #' @importFrom openssl base64_encode
 #' @import methods
 #' @import curl
-#' @import httr
+#' @importFrom httr DELETE
+#' @importFrom httr GET
+#' @importFrom httr POST
+#' @importFrom httr PUT
+#' @importFrom httr add_headers
+#' @importFrom httr authenticate
+#' @importFrom httr content
+#' @importFrom httr headers
+#' @importFrom httr http_status
+#' @importFrom httr status_code
 #' @import jsonlite
 #' @import XML
 #' 
