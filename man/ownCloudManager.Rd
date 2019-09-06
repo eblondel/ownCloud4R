@@ -40,6 +40,11 @@ ownCloudManager
    to \code{""} by default, which corresponds to the root of the 'ownCloud'
    repository.
  }
+ \item{\code{getShares(path, reshares, shared_with_me, state, subfiles, pretty)}}{
+   Get list of shares as \code{list}. To return as \code{data.frame}, set 
+   \code{pretty = TRUE}. The method accepts additional parameters .More info
+   at \href{https://doc.owncloud.com/server/developer_manual/core/apis/ocs-share-api.html#get-all-shares}
+ }
 }
 }
 

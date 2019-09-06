@@ -48,29 +48,34 @@ ownCloudRequest <- R6Class("ownCloudRequest",
     response = NA,
     exception = NA,
     result = NA,
-    
-    user = NULL,
-    pwd = NULL,
-    token = NULL,
-    auth_scheme = "Basic",
+    auth = NULL,
 
     #GET
     #---------------------------------------------------------------
-    GET = function(url, request){
+    GET = function(url, request, namedParams){
       req <- paste(url, request, sep = "/")
+      if(!endsWith(req,"?")) req <- paste0(req, "?")
+      namedParams <- namedParams[!sapply(namedParams, is.null)]
+      paramNames <- names(namedParams)
+      namedParams <- lapply(namedParams, function(namedParam){
+        if(is.logical(namedParam)) namedParam <- tolower(as(namedParam, "character"))
+        return(namedParam)
+      })
+      params <- paste(paramNames, namedParams, sep = "=", collapse = "&")
+      req <- paste0(req, params)
       self$INFO(sprintf("Fetching %s", req))
       
-      #headers
-      headers <- c()
-      if(!is.null(private$token)){
-        headers <- c(headers, "Authorization" = paste(private$auth_scheme, private$token))
+      if(is.null(private$auth)){
+        errMsg <- "An user/paswword authentication request is required"
+        self$ERROR(errMsg)
+        stop(errMsg)
       }
       
       r <- NULL
       if(self$verbose.debug){
-        r <- with_verbose(GET(req, add_headers(headers)))
+        r <- with_verbose(GET(req, private$auth))
       }else{
-        r <- GET(req, add_headers(headers))
+        r <- GET(req, private$auth)
       }
       responseContent <- content(r, type = "application/json", encoding = "UTF-8")
       response <- list(request = request, requestHeaders = headers(r),
@@ -136,20 +141,20 @@ ownCloudRequest <- R6Class("ownCloudRequest",
   public = list(
     #initialize
     initialize = function(type, url, request,
-                          user = NULL, pwd = NULL, 
+                          user = NULL, pwd = NULL,
+                          namedParams = list(),
                           logger = NULL, ...) {
       super$initialize(logger = logger)
       private$type = type
       private$url = url
       private$request = request
+      private$namedParams = namedParams
+      private$namedParams$format = "json"
       
       #authentication schemes
       if(!is.null(user) && !is.null(pwd)){
         #Basic authentication (user/pwd) scheme
-        private$auth_scheme = "Basic"
-        private$user = user
-        private$pwd = pwd
-        private$token = openssl::base64_encode(charToRaw(paste(user, pwd, sep=":")))
+        private$auth = authenticate(user = user, password = pwd)
       }
     },
     
@@ -157,7 +162,7 @@ ownCloudRequest <- R6Class("ownCloudRequest",
     execute = function(){
       
       req <- switch(private$type,
-        "GET" = private$GET(private$url, private$request),
+        "GET" = private$GET(private$url, private$request, private$namedParams),
         "PROPFIND" = private$PROPFIND(private$url, private$request)
       )
       

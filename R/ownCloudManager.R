@@ -29,6 +29,11 @@
 #'    to \code{""} by default, which corresponds to the root of the 'ownCloud'
 #'    repository.
 #'  }
+#'  \item{\code{getShares(path, reshares, shared_with_me, state, subfiles, pretty)}}{
+#'    Get list of shares as \code{list}. To return as \code{data.frame}, set 
+#'    \code{pretty = TRUE}. The method accepts additional parameters .More info
+#'    at \href{https://doc.owncloud.com/server/developer_manual/core/apis/ocs-share-api.html#get-all-shares}
+#'  }
 #'}
 #' 
 #' @author Emmanuel Blondel <emmanuel.blondel1@@gmail.com>
@@ -55,7 +60,7 @@ ownCloudManager <-  R6Class("ownCloudManager",
     #connect
     connect = function(){
       caps_req <- ownCloudRequest$new(
-        type = "GET", private$url, "/ocs/v1.php/cloud/capabilities?format=json",
+        type = "GET", private$url, "ocs/v1.php/cloud/capabilities",
         private$user, private$pwd, logger = self$loggerType
       )
       caps_req$execute()
@@ -97,6 +102,42 @@ ownCloudManager <-  R6Class("ownCloudManager",
       list_req$execute()
       list_resp <- list_req$getResponse()
       return(list_resp)
+    },
+    
+    #getShares
+    getShares = function(path = NULL, reshares = FALSE, shared_with_me = NULL,
+                         state = NULL, subfiles = FALSE, 
+                         pretty = FALSE){
+      
+      allowedStates <- c("accepted", "all", "declined", "pending", "rejected")
+      if(!is.null(state)) if(!(state %in% allowedStates)){
+        errMsg <- sprintf("'state' should be one value among [%s]", 
+                          paste(allowedStates, collapse=","))
+        self$ERROR(errMsg)
+        stop(errMsg)
+      }
+      
+      request <- "ocs/v1.php/apps/files_sharing/api/v1/shares"
+      get_req <- ownCloudRequest$new(
+        type = "GET", private$url, request,
+        private$user, private$pwd, 
+        namedParams = list(
+          path = path,
+          reshares = reshares,
+          shared_with_me = shared_with_me,
+          state = state,
+          subfiles = subfiles
+        ),
+        logger = self$loggerType
+      )
+      get_req$execute()
+      get_resp <- get_req$getResponse()
+      names(get_resp)
+      get_out <- get_resp$ocs$data
+      if(!is.null(get_out)) if(pretty){
+        get_out <- as.data.frame(do.call("rbind",lapply(get_out, unlist)))
+      }
+      return(get_out)
     }
   )
 )
