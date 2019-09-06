@@ -4,7 +4,7 @@
 #' @keywords owncloud manager
 #' @return Object of \code{\link{R6Class}} for modelling an ownCloudManager
 #' @format \code{\link{R6Class}} object.
-#' @section Methods:
+#' @section General Methods:
 #' \describe{
 #'  \item{\code{new(url, user, pwd, logger)}}{
 #'    This method is used to instantiate an ownCloudManager. The user/pwd are
@@ -24,15 +24,29 @@
 #'  \item{\code{getWebdavRoot()}}{
 #'    Get the 'ownCloud' WebDAV root URL
 #'  }
+#' }
+#'
+#' @section WEBDAV methods:
+#' \describe{
 #'  \item{\code{listFiles(relPath)}}{
-#'    List folders/files given a relative path. The relative path is set
-#'    to \code{""} by default, which corresponds to the root of the 'ownCloud'
-#'    repository.
+#'    WEBDAV method to list folders/files given a relative path. The relative path is set
+#'    to \code{"/"} by default, which corresponds to the root of the 'ownCloud' repository.
 #'  }
+#'  \item{\code{makeCollection(name, relPath)}}{
+#'    WEBDAV method to make a collection. By default \code{relPath} is set to \code{"/"} (root).
+#'    The \code{name} is the name of the new collection to be created. The function is recursive
+#'    in the sense that a \code{name} can be provided as relative path of a collection tree 
+#'    (eg \code{newfolder1/newfolder2/newfolder3}), the function will create recursively as 
+#'    many collections are handled in the name. 
+#'  }
+#' }
+#' 
+#' @section 'ownCloud' Share methods:
+#' \describe{
 #'  \item{\code{getShares(path, reshares, shared_with_me, state, subfiles, pretty)}}{
 #'    Get list of shares as \code{list}. To return as \code{data.frame}, set 
 #'    \code{pretty = TRUE}. The method accepts additional parameters .More info
-#'    at \href{https://doc.owncloud.com/server/developer_manual/core/apis/ocs-share-api.html#get-all-shares}
+#'    at 
 #'  }
 #'}
 #' 
@@ -60,7 +74,7 @@ ownCloudManager <-  R6Class("ownCloudManager",
     #connect
     connect = function(){
       caps_req <- ownCloudRequest$new(
-        type = "GET", private$url, "ocs/v1.php/cloud/capabilities",
+        type = "HTTP_GET", private$url, "ocs/v1.php/cloud/capabilities",
         private$user, private$pwd, logger = self$loggerType
       )
       caps_req$execute()
@@ -93,15 +107,36 @@ ownCloudManager <-  R6Class("ownCloudManager",
     },
     
     #listFiles
-    listFiles = function(relPath = ""){
-      request <- paste(self$getWebdavRoot(), relPath, sep="/")
+    listFiles = function(relPath = "/"){
+      request <- paste0(self$getWebdavRoot(), relPath)
       list_req <- ownCloudRequest$new(
-        type = "PROPFIND", private$url, request,
+        type = "WEBDAV_PROPFIND", private$url, request,
         private$user, private$pwd, logger = self$loggerType
       )
       list_req$execute()
       list_resp <- list_req$getResponse()
       return(list_resp)
+    },
+    
+    #makeCollection
+    makeCollection = function(name, relPath = "/"){
+      col_names <- unlist(strsplit(name, "/"))
+      if(length(col_names)==1){
+        request <- paste0(self$getWebdavRoot(), relPath, name)
+        mkcol_req <- ownCloudRequest$new(
+          type = "WEBDAV_MKCOL", private$url, request,
+          private$user, private$pwd, logger = self$loggerType
+        )
+        mkcol_req$execute()
+        mkcol_resp <- mkcol_req$getResponse()
+        return(mkcol_resp)
+      }else{
+        for(i in 1:length(col_names)){
+          newRelPath <- "/"
+          if(i>1) newRelPath <- paste0(newRelPath, paste(col_names[1:(i-1)], collapse="/"), "/")
+          self$makeCollection(col_names[i], newRelPath)
+        }
+      }
     },
     
     #getShares
@@ -119,7 +154,7 @@ ownCloudManager <-  R6Class("ownCloudManager",
       
       request <- "ocs/v1.php/apps/files_sharing/api/v1/shares"
       get_req <- ownCloudRequest$new(
-        type = "GET", private$url, request,
+        type = "HTTP_GET", private$url, request,
         private$user, private$pwd, 
         namedParams = list(
           path = path,

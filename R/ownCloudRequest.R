@@ -48,11 +48,14 @@ ownCloudRequest <- R6Class("ownCloudRequest",
     response = NA,
     exception = NA,
     result = NA,
+    
+    user = NULL,
+    pwd = NULL,
     auth = NULL,
 
-    #GET
+    #HTTP_GET
     #---------------------------------------------------------------
-    GET = function(url, request, namedParams){
+    HTTP_GET = function(url, request, namedParams){
       req <- paste(url, request, sep = "/")
       if(!endsWith(req,"?")) req <- paste0(req, "?")
       namedParams <- namedParams[!sapply(namedParams, is.null)]
@@ -63,10 +66,10 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       })
       params <- paste(paramNames, namedParams, sep = "=", collapse = "&")
       req <- paste0(req, params)
-      self$INFO(sprintf("Fetching %s", req))
+      self$INFO(sprintf("HTTP/GET - Fetching %s", req))
       
       if(is.null(private$auth)){
-        errMsg <- "An user/paswword authentication request is required"
+        errMsg <- "HTTP/GET - An user/paswword authentication request is required"
         self$ERROR(errMsg)
         stop(errMsg)
       }
@@ -83,19 +86,30 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       return(response)
     },
     
-    #PROPFIND
-    PROPFIND = function(url, request){
-      uri <- paste(url, request, sep = "/")
+    #WEBDAV_PROPFIND
+    WEBDAV_PROPFIND = function(url, request){
+      req <- paste(url, request, sep = "/")
+      
+      self$INFO(sprintf("WEBDAV/PROPFIND - Listing files at '%s'", req))
+      
       h <- new_handle()
       handle_setopt(h, customrequest = "PROPFIND")
       handle_setopt(h, username = private$user)
       handle_setopt(h, password = private$pwd)
-      response <- curl_fetch_memory(uri, h)
+      response <- curl_fetch_memory(req, h)
       xml <- rawToChar(response$content)
       response <- xmlParse(xml, asText = TRUE)
       webdavNS <- c(d = "DAV:")
-      base <- paste(paste("/", strsplit(uri, "/")[[1]][-1:-3], sep="", collapse=""), "/", sep="")
+      base <- paste(paste("/", strsplit(req, "/")[[1]][-1:-3], sep="", collapse=""), "/", sep="")
       nodes <- getNodeSet(response, "//d:response")
+      if(length(nodes)>0){
+        self$INFO("WEBDAV/PROPFIND - Successful file listing!")
+      }else{
+        errMsg <- "WEBDAV/PROPFIND - Error while listing files"
+        self$ERROR(errMsg)
+        stop(errMsg)
+      }
+      
       result <- do.call("rbind", lapply(nodes, function(node){
         out_node <- data.frame(
           name = sub(base, "", URLdecode(xpathSApply(xmlDoc(node), "//d:href", namespaces = webdavNS, xmlValue))),
@@ -134,6 +148,28 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       response <- list(request = request, requestHeaders = NA,
                        status = NA, response = result)
       return(response)
+    },
+    
+    #WEBDAV_MKCOL
+    WEBDAV_MKCOL = function(url, request){
+      response <- NULL
+      req <- paste(url, request, sep = "/")
+      self$INFO(sprintf("WEBDAV/MKCOL - Creating collection '%s' at '%s'", request, req))
+      h <- new_handle()
+      handle_setopt(h, customrequest = "MKCOL")
+      handle_setopt(h, username = private$user)
+      handle_setopt(h, password = private$pwd)
+      response <- curl_fetch_memory(req, h)
+      if(response$status_code==201){
+        self$INFO(sprintf("WEBDAV/MKCOL - Successfuly created collection '%s'", request))
+        response <- list(request = request, requestHeaders = NA,
+                         status = response$status_code, response = response$url)
+      }else{
+        errMsg <- sprintf("WEBDAV/MKCOL - Error while creating collection at '%s' at '%s'", request, req)
+        self$ERROR(errMsg)
+        stop(errMsg)
+      }
+      return(response)
     }
   ),
   
@@ -154,6 +190,8 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       #authentication schemes
       if(!is.null(user) && !is.null(pwd)){
         #Basic authentication (user/pwd) scheme
+        private$user <- user
+        private$pwd <- pwd
         private$auth = authenticate(user = user, password = pwd)
       }
     },
@@ -162,8 +200,9 @@ ownCloudRequest <- R6Class("ownCloudRequest",
     execute = function(){
       
       req <- switch(private$type,
-        "GET" = private$GET(private$url, private$request, private$namedParams),
-        "PROPFIND" = private$PROPFIND(private$url, private$request)
+        "HTTP_GET" = private$HTTP_GET(private$url, private$request, private$namedParams),
+        "WEBDAV_PROPFIND" = private$WEBDAV_PROPFIND(private$url, private$request),
+        "WEBDAV_MKCOL" = private$WEBDAV_MKCOL(private$url, private$request)
       )
       
       private$request <- req$request

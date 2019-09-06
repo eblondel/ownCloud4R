@@ -14,7 +14,7 @@ Object of \code{\link{R6Class}} for modelling an ownCloudManager
 \description{
 ownCloudManager
 }
-\section{Methods}{
+\section{General Methods}{
 
 \describe{
  \item{\code{new(url, user, pwd, logger)}}{
@@ -35,15 +35,31 @@ ownCloudManager
  \item{\code{getWebdavRoot()}}{
    Get the 'ownCloud' WebDAV root URL
  }
+}
+}
+
+\section{WEBDAV methods}{
+
+\describe{
  \item{\code{listFiles(relPath)}}{
-   List folders/files given a relative path. The relative path is set
-   to \code{""} by default, which corresponds to the root of the 'ownCloud'
-   repository.
+   WEBDAV method to list folders/files given a relative path. The relative path is set
+   to \code{"/"} by default, which corresponds to the root of the 'ownCloud' repository.
  }
+ \item{\code{makeCollection(name, relPath)}}{
+   WEBDAV method to make a collection. By default \code{relPath} is set to \code{"/"} (root).
+   The \code{name} is the name of the new collection to be created. Returns the WEBDAV
+   path of the newly created collection.
+ }
+}
+}
+
+\section{'ownCloud' Share methods}{
+
+\describe{
  \item{\code{getShares(path, reshares, shared_with_me, state, subfiles, pretty)}}{
    Get list of shares as \code{list}. To return as \code{data.frame}, set 
    \code{pretty = TRUE}. The method accepts additional parameters .More info
-   at \href{https://doc.owncloud.com/server/developer_manual/core/apis/ocs-share-api.html#get-all-shares}
+   at 
  }
 }
 }
