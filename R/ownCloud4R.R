@@ -19,6 +19,7 @@
 #' @importFrom httr status_code
 #' @importFrom httr with_verbose
 #' @importFrom httr upload_file
+#' @importFrom httr handle
 #' @import jsonlite
 #' @import XML
 #' 
