@@ -50,10 +50,9 @@ ownCloudRequest <- R6Class("ownCloudRequest",
     response = NA,
     exception = NA,
     result = NA,
-    
-    user = NULL,
-    pwd = NULL,
-    auth = NULL,
+
+    auth_scheme = "Basic",
+    auth = NA,
 
     #HTTP_GET
     #---------------------------------------------------------------
@@ -70,17 +69,11 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       req <- paste0(req, params)
       self$INFO(sprintf("HTTP/GET - Fetching %s", req))
       
-      if(is.null(private$auth)){
-        errMsg <- "HTTP/GET - An user/paswword authentication request is required"
-        self$ERROR(errMsg)
-        stop(errMsg)
-      }
-      
       r <- NULL
       if(self$verbose.debug){
-        r <- with_verbose(GET(req, private$auth))
+        r <- with_verbose(GET(req, handle = handle(''), add_headers("Authorization" = private$auth)))
       }else{
-        r <- GET(req, private$auth)
+        r <- GET(req, handle = handle(''), add_headers("Authorization" = private$auth))
       }
       responseContent <- content(r, type = "application/json", encoding = "UTF-8")
       response <- list(request = request, requestHeaders = headers(r),
@@ -109,9 +102,9 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       
       r <- NULL
       if(self$verbose.debug){
-        r <- with_verbose(PUT(req_url, private$auth, body = body))
+        r <- with_verbose(PUT(req_url, handle = handle(''), add_headers("Authorization" = private$auth), body = body))
       }else{
-        r <- PUT(req_url, private$auth, body = body)
+        r <- PUT(req_url, handle = handle(''), add_headers("Authorization" = private$auth), body = body)
       }
 
       if(status_code(r)==201){
@@ -131,8 +124,7 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       
       h <- new_handle()
       handle_setopt(h, customrequest = "PROPFIND")
-      handle_setopt(h, username = private$user)
-      handle_setopt(h, password = private$pwd)
+      handle_setheaders(h, Authorization = private$auth)
       response <- curl_fetch_memory(req_url, h)
       xml <- rawToChar(response$content)
       response <- xmlParse(xml, asText = TRUE)
@@ -194,8 +186,7 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       self$INFO(sprintf("WEBDAV/MKCOL - Creating collection '%s' at '%s'", request, req_url))
       h <- new_handle()
       handle_setopt(h, customrequest = "MKCOL")
-      handle_setopt(h, username = private$user)
-      handle_setopt(h, password = private$pwd)
+      handle_setheaders(h, Authorization = private$auth)
       response <- curl_fetch_memory(req_url, h)
       if(response$status_code==201){
         self$INFO(sprintf("WEBDAV/MKCOL - Successfuly created collection '%s'", request))
@@ -230,9 +221,8 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       #authentication schemes
       if(!is.null(user) && !is.null(pwd)){
         #Basic authentication (user/pwd) scheme
-        private$user <- user
-        private$pwd <- pwd
-        private$auth = authenticate(user = user, password = pwd)
+        private$auth_scheme <- "Basic"
+        private$auth <- paste(private$auth_scheme, openssl::base64_encode(paste(user, pwd,sep=":")))
       }
     },
     

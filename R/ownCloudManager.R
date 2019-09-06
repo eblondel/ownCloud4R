@@ -70,7 +70,7 @@ ownCloudManager <-  R6Class("ownCloudManager",
       super$initialize(logger = logger)
       private$url = url
       private$user <- user
-      private$pwd <- user
+      private$pwd <- pwd
       self$connect()
     },
     
