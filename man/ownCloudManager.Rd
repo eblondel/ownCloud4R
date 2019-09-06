@@ -38,22 +38,24 @@ ownCloudManager
 }
 }
 
-\section{WEBDAV methods}{
+\section{WebDAV methods}{
 
 \describe{
  \item{\code{listFiles(relPath)}}{
-   WEBDAV method to list folders/files given a relative path. The relative path is set
+   WebDAV method to list folders/files given a relative path. The relative path is set
    to \code{"/"} by default, which corresponds to the root of the 'ownCloud' repository.
  }
  \item{\code{makeCollection(name, relPath)}}{
-   WEBDAV method to make a collection. By default \code{relPath} is set to \code{"/"} (root).
-   The \code{name} is the name of the new collection to be created. Returns the WEBDAV
-   path of the newly created collection.
+   WebDAV method to make a collection. By default \code{relPath} is set to \code{"/"} (root).
+   The \code{name} is the name of the new collection to be created. The function is recursive
+   in the sense that a \code{name} can be provided as relative path of a collection tree 
+   (eg \code{newfolder1/newfolder2/newfolder3}), the function will create recursively as 
+   many collections are handled in the name. 
  }
 }
 }
 
-\section{'ownCloud' Share methods}{
+\section{'ownCloud' Share API methods}{
 
 \describe{
  \item{\code{getShares(path, reshares, shared_with_me, state, subfiles, pretty)}}{
