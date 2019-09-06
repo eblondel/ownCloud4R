@@ -144,6 +144,13 @@ ownCloudManager <-  R6Class("ownCloudManager",
                          state = NULL, subfiles = FALSE, 
                          pretty = FALSE){
       
+      if(!private$capabilities$files_sharing$api_enabled){
+        errMsg <- "The 'getShares' method requires the 'ownCloud' OCS Sharing API to be enabled."
+        errMsg <- paste(errMsg, "Please get in touch with your 'ownCloud' administrator")
+        self$ERROR(errMsg)
+        stop(errMsg)
+      }
+      
       allowedStates <- c("accepted", "all", "declined", "pending", "rejected")
       if(!is.null(state)) if(!(state %in% allowedStates)){
         errMsg <- sprintf("'state' should be one value among [%s]", 
