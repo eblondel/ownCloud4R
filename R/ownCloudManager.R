@@ -134,6 +134,7 @@ ownCloudManager <-  R6Class("ownCloudManager",
         mkcol_resp <- mkcol_req$getResponse()
         return(mkcol_resp)
       }else{
+        self$INFO(sprintf("Nested collections detected in '%s'. Splitting name to make nested collections", name))
         for(i in 1:length(col_names)){
           newRelPath <- "/"
           if(i>1) newRelPath <- paste0(newRelPath, paste(col_names[1:(i-1)], collapse="/"), "/")
