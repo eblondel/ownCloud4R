@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/eblondel/ownCloud4R.svg?branch=master)](https://travis-ci.org/eblondel/ownCloud4R)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ownCloud4R)](https://cran.r-project.org/package=ownCloud4R)
 [![Github_Status_Badge](https://img.shields.io/badge/Github-0.1-blue.svg)](https://github.com/eblondel/ownCloud4R)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3401579.svg)](https://doi.org/10.5281/zenodo.3401579)
 
 **R Interface to ownCloud**
 
@@ -16,5 +17,5 @@ For ownCloud4R sponsoring/funding new developments, enhancements, support reques
 
 ## Citation
 
-We thank in advance people that use ``ownCloud4R`` for citing it in their work / publication(s). For this, please use the citation provided at this link [![DOI](<Link>)
+We thank in advance people that use ``ownCloud4R`` for citing it in their work / publication(s). For this, please use the citation provided at this link [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3401579.svg)](https://doi.org/10.5281/zenodo.3401579)
 
