@@ -39,6 +39,9 @@
 #'    (eg \code{newfolder1/newfolder2/newfolder3}), the function will create recursively as 
 #'    many collections are handled in the name. 
 #'  }
+#'  \item{\code{uploadFile(filename, relPath)}}{
+#'    WebDAV method to upload a file. By default \code{relPath} is set to \code{"/"} (root).
+#'  }
 #' }
 #' 
 #' @section 'ownCloud' Share API methods:
@@ -137,6 +140,33 @@ ownCloudManager <-  R6Class("ownCloudManager",
           self$makeCollection(col_names[i], newRelPath)
         }
       }
+    },
+    
+    #uploadFile
+    uploadFile = function(filename, relPath = "/"){
+      if(!startsWith(relPath, "/")) relPath <- paste0("/", relPath)
+      if(!endsWith(relPath, "/")) relPath <- paste0(relPath, "/")
+      request <- paste0(self$getWebdavRoot(), relPath, filename)
+      self$INFO(sprintf("WEBDAV - Uploading file '%s' at '%s'", 
+                        filename, paste(private$url, request, sep="/")))
+      upload_req <- ownCloudRequest$new(
+        type = "HTTP_PUT", private$url, request,
+        private$user, private$pwd, 
+        filename = filename,
+        logger = self$loggerType
+      )
+      upload_req$execute()
+      if(upload_req$getStatus()==201){
+        self$INFO(sprintf("Successfuly uploaded file '%s' at '%s'",
+                          filename, paste(private$url, request, sep="/")))
+      }else{
+        errMsg <- sprintf("WEBDAV - Error while uploading '%s' at '%s'",
+                          filename, paste(private$url, request, sep="/"))
+        self$ERROR(errMsg)
+        stop(errMsg)
+      }
+      upload_resp <- upload_req$getResponse()
+      return(upload_resp)
     },
     
     #getShares

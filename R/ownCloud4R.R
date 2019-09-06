@@ -18,6 +18,7 @@
 #' @importFrom httr http_status
 #' @importFrom httr status_code
 #' @importFrom httr with_verbose
+#' @importFrom httr upload_file
 #' @import jsonlite
 #' @import XML
 #' 

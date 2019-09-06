@@ -52,6 +52,9 @@ ownCloudManager
    (eg \code{newfolder1/newfolder2/newfolder3}), the function will create recursively as 
    many collections are handled in the name. 
  }
+ \item{\code{uploadFile(filename, relPath)}}{
+   WebDAV method to upload a file. By default \code{relPath} is set to \code{"/"} (root).
+ }
 }
 }
 
