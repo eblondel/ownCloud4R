@@ -53,6 +53,10 @@ ownCloudRequest <- R6Class("ownCloudRequest",
 
     auth_scheme = "Basic",
     auth = NA,
+    
+    getUserAgent = function(){
+      return(paste("ownCloud4R", packageVersion("ownCloud4R"), sep="-"))
+    },
 
     #HTTP_GET
     #---------------------------------------------------------------
@@ -71,9 +75,15 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       
       r <- NULL
       if(self$verbose.debug){
-        r <- with_verbose(GET(req, handle = handle(''), add_headers("Authorization" = private$auth)))
+        r <- with_verbose(GET(req, handle = handle(''), add_headers(
+          "User-Agent" = private$getUserAgent(),
+          "Authorization" = private$auth
+        )))
       }else{
-        r <- GET(req, handle = handle(''), add_headers("Authorization" = private$auth))
+        r <- GET(req, handle = handle(''), add_headers(
+          "User-Agent" = private$getUserAgent(),
+          "Authorization" = private$auth
+        ))
       }
       responseContent <- content(r, type = "application/json", encoding = "UTF-8")
       response <- list(request = request, requestHeaders = headers(r),
@@ -102,9 +112,14 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       
       r <- NULL
       if(self$verbose.debug){
-        r <- with_verbose(PUT(req_url, handle = handle(''), add_headers("Authorization" = private$auth), body = body))
+        r <- with_verbose(PUT(req_url, handle = handle(''), add_headers(
+          "User-Agent" = private$getUserAgent(),
+          "Authorization" = private$auth), body = body
+        ))
       }else{
-        r <- PUT(req_url, handle = handle(''), add_headers("Authorization" = private$auth), body = body)
+        r <- PUT(req_url, handle = handle(''), add_headers(
+          "User-Agent" = private$getUserAgent(),
+          "Authorization" = private$auth), body = body)
       }
 
       if(status_code(r)==201){
