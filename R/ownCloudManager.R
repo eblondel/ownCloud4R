@@ -111,6 +111,7 @@ ownCloudManager <-  R6Class("ownCloudManager",
     
     #listFiles
     listFiles = function(relPath = "/"){
+      if(!startsWith(relPath, "/")) relPath <- paste0("/", relPath)
       request <- paste0(self$getWebdavRoot(), relPath)
       list_req <- ownCloudRequest$new(
         type = "WEBDAV_PROPFIND", private$url, request,
