@@ -4,24 +4,8 @@
 #' @docType package
 #' 
 #' @importFrom R6 R6Class
-#' @importFrom openssl base64_encode
 #' @import methods
-#' @import curl
-#' @importFrom httr DELETE
-#' @importFrom httr GET
-#' @importFrom httr POST
-#' @importFrom httr PUT
-#' @importFrom httr add_headers
-#' @importFrom httr authenticate
-#' @importFrom httr content
-#' @importFrom httr headers
-#' @importFrom httr http_status
-#' @importFrom httr status_code
-#' @importFrom httr with_verbose
-#' @importFrom httr upload_file
-#' @importFrom httr handle
-#' @import jsonlite
-#' @import XML
+#' @import ocs4R
 #' 
 #' @title Interface to 'ownCloud' REST API
 #' @description Provides an Interface to 'ownCloud (<https://owncloud.org/>) REST API.
