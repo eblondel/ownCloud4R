@@ -30,8 +30,8 @@
 #'  \tabular{ll}{
 #'    Package: \tab ownCloud4R\cr
 #'    Type: \tab Package\cr
-#'    Version: \tab 0.1\cr
-#'    Date: \tab 2019-09-05\cr
+#'    Version: \tab 0.0.9000\cr
+#'    Date: \tab 2019-11-06\cr
 #'    License: \tab MIT\cr
 #'    LazyLoad: \tab yes\cr
 #'  }
