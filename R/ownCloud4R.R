@@ -24,7 +24,7 @@
 #' @import XML
 #' 
 #' @title Interface to 'ownCloud' REST API
-#' @description Provides an Interface to 'Zenodo' (<https://owncloud.org/>) REST API.
+#' @description Provides an Interface to 'ownCloud (<https://owncloud.org/>) REST API.
 #'
 #' @details
 #'  \tabular{ll}{
