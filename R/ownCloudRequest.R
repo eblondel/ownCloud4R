@@ -60,8 +60,9 @@ ownCloudRequest <- R6Class("ownCloudRequest",
 
     #HTTP_GET
     #---------------------------------------------------------------
-    HTTP_GET = function(url, request, namedParams){
-      req <- paste(url, request, sep = "/")
+    HTTP_GET = function(url, request = NULL, namedParams){
+      req <- url
+      if(!is.null(request)) req <- paste(url, request, sep = "/")
       if(!endsWith(req,"?")) req <- paste0(req, "?")
       namedParams <- namedParams[!sapply(namedParams, is.null)]
       paramNames <- names(namedParams)
@@ -91,10 +92,52 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       return(response)
     },
     
+    #HTTP_POST
+    #---------------------------------------------------------------
+    HTTP_POST = function(url, request = NULL, namedParams = list(), content = ""){
+      req <- url
+      if(!is.null(request)) req <- paste(url, request, sep = "/")
+      if(!endsWith(req,"?")) req <- paste0(req, "?")
+      namedParams <- namedParams[!sapply(namedParams, is.null)]
+      paramNames <- names(namedParams)
+      namedParams <- lapply(namedParams, function(namedParam){
+        if(is.logical(namedParam)) namedParam <- tolower(as(namedParam, "character"))
+        return(namedParam)
+      })
+      params <- paste(paramNames, namedParams, sep = "=", collapse = "&")
+      req <- paste0(req, params)
+      
+      self$INFO(sprintf("HTTP/POST - Sending request '%s'", req))
+      
+      #content
+      body <- content
+      
+      r <- NULL
+      if(self$verbose.debug){
+        r <- with_verbose(POST(req, handle = handle(''), add_headers(
+          "User-Agent" = private$getUserAgent(),
+          "Authorization" = private$auth), body = body
+        ))
+      }else{
+        r <- POST(req, handle = handle(''), add_headers(
+          "User-Agent" = private$getUserAgent(),
+          "Authorization" = private$auth), body = body)
+      }
+      
+      if(status_code(r)==200){
+        self$INFO(sprintf("HTTP/POST - Successful request '%s'", req))
+      }
+      
+      response <- list(request = req, requestHeaders = headers(r),
+                       status = status_code(r), response = httr::content(r))
+      return(response)
+    },
+    
     #HTTP_PUT
     #---------------------------------------------------------------
-    HTTP_PUT = function(url, request, content = NULL, filename = NULL){
-      req_url = paste(url, request, sep="/")
+    HTTP_PUT = function(url, request = NULL, content = NULL, filename = NULL){
+      req_url <- url
+      if(!is.null(request)) req_url = paste(url, request, sep="/")
 
       self$INFO(sprintf("HTTP/PUT - Putting content at '%s'", req_url))
       
@@ -246,6 +289,7 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       
       req <- switch(private$type,
         "HTTP_GET" = private$HTTP_GET(private$url, private$request, private$namedParams),
+        "HTTP_POST" = private$HTTP_POST(private$url, private$request, private$namedParams, private$content),
         "HTTP_PUT" = private$HTTP_PUT(private$url, private$request, private$content, private$filename),
         "WEBDAV_PROPFIND" = private$WEBDAV_PROPFIND(private$url, private$request),
         "WEBDAV_MKCOL" = private$WEBDAV_MKCOL(private$url, private$request)
@@ -256,17 +300,11 @@ ownCloudRequest <- R6Class("ownCloudRequest",
       private$status <- req$status
       private$response <- req$response
       
-      if(private$type == "GET"){
-        if(private$status != 200){
-          private$exception <- sprintf("Error while executing request '%s'", req$request)
-          self$ERROR(private$exception)
-        }
-      }
-      
-      if(private$type == "PUT"){
-        if(private$status != 201){
-          private$exception <- sprintf("Error while executing request '%s'", req$request)
-          self$ERROR(private$exception)
+      if(private$status %in% c(200,201)){
+        if(private$response$ocs$meta$status == "failure"){
+          errMsg <- sprintf("%s [status code = %s]", private$response$ocs$meta$message, private$response$ocs$meta$statuscode)
+          self$ERROR(errMsg)
+          stop(errMsg)
         }
       }
     },
