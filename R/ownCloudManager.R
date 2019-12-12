@@ -18,9 +18,12 @@
 #' 
 ownCloudManager <-  R6Class("ownCloudManager",
   inherit = ocs4R::ocsManager,
+  lock_objects = FALSE,
   public = list(
     initialize = function(url, user, pwd, logger = NULL){
+      require(ocs4R)
       super$initialize(url, user, pwd, logger)
     }
+    
   )
 )

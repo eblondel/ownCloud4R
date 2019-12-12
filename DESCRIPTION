@@ -1,6 +1,6 @@
 Package: ownCloud4R
 Version: 0.0.9000
-Date: 2019-11-06
+Date: 2019-12-12
 Title: Interface to 'ownCloud' REST API
 Authors@R: c(
   person("Emmanuel", "Blondel", role = c("aut", "cre"), email = "emmanuel.blondel1@gmail.com", comment = c(ORCID = "0000-0002-5870-5762")))
